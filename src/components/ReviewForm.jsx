@@ -91,7 +91,7 @@ export default function ReviewForm({ onSubmit }) {
       {/* Client */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Client / Company *
+          Client *
         </label>
         <input
           type="text"

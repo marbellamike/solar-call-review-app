@@ -19,7 +19,10 @@ export default function App() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({
+            ...formData,
+            emailTo: 'michael@springlead.co.uk'
+          })
         }
       )
 
