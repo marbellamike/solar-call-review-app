@@ -4,7 +4,6 @@ export default function ReviewForm({ onSubmit }) {
   const [formData, setFormData] = useState({
     agent: '',
     client: '',
-    partner: '',
     solarCompany: '',
     calls: [{ transcript: '' }]
   })
@@ -118,21 +117,6 @@ export default function ReviewForm({ onSubmit }) {
           placeholder="e.g., Beechdale Energy, SunPower UK"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solar-500 focus:border-transparent outline-none transition"
           required
-        />
-      </div>
-
-      {/* Partner */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Partner / Referrer
-        </label>
-        <input
-          type="text"
-          name="partner"
-          value={formData.partner}
-          onChange={handleChange}
-          placeholder="e.g., Solar Partners UK (optional)"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solar-500 focus:border-transparent outline-none transition"
         />
       </div>
 
