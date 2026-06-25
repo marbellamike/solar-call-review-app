@@ -5,32 +5,71 @@ export default function ReviewForm({ onSubmit }) {
     agent: '',
     client: '',
     partner: '',
-    transcript: ''
+    solarCompany: '',
+    calls: [{ transcript: '' }]
   })
 
-  const [transcriptLength, setTranscriptLength] = useState(0)
+  const [transcriptLengths, setTranscriptLengths] = useState([0])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
-    if (name === 'transcript') {
-      setTranscriptLength(value.length)
+  const handleTranscriptChange = (index, value) => {
+    const newCalls = [...formData.calls]
+    newCalls[index].transcript = value
+    setFormData(prev => ({ ...prev, calls: newCalls }))
+
+    const newLengths = [...transcriptLengths]
+    newLengths[index] = value.length
+    setTranscriptLengths(newLengths)
+  }
+
+  const addCall = () => {
+    setFormData(prev => ({
+      ...prev,
+      calls: [...prev.calls, { transcript: '' }]
+    }))
+    setTranscriptLengths([...transcriptLengths, 0])
+  }
+
+  const removeCall = (index) => {
+    if (formData.calls.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        calls: prev.calls.filter((_, i) => i !== index)
+      }))
+      setTranscriptLengths(transcriptLengths.filter((_, i) => i !== index))
     }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (!formData.transcript.trim()) {
-      alert('Please enter a call transcript')
+    if (!formData.agent.trim() || !formData.client.trim() || !formData.solarCompany.trim()) {
+      alert('Please fill in Agent, Client, and Solar Company')
       return
     }
 
-    onSubmit(formData)
+    const hasTranscript = formData.calls.some(call => call.transcript.trim())
+    if (!hasTranscript) {
+      alert('Please enter at least one call transcript')
+      return
+    }
+
+    // Combine all transcripts with call markers
+    const combinedTranscript = formData.calls
+      .map((call, idx) => `--- CALL ${idx + 1} ---\n${call.transcript}`)
+      .join('\n\n')
+
+    onSubmit({
+      ...formData,
+      transcript: combinedTranscript
+    })
   }
 
-  const isComplete = formData.agent.trim() && formData.client.trim() && formData.transcript.trim()
+  const isComplete = formData.agent.trim() && formData.client.trim() && formData.solarCompany.trim() && formData.calls.some(c => c.transcript.trim())
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8 space-y-6">
@@ -66,10 +105,26 @@ export default function ReviewForm({ onSubmit }) {
         />
       </div>
 
+      {/* Solar Company */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Solar Company Name *
+        </label>
+        <input
+          type="text"
+          name="solarCompany"
+          value={formData.solarCompany}
+          onChange={handleChange}
+          placeholder="e.g., Beechdale Energy, SunPower UK"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solar-500 focus:border-transparent outline-none transition"
+          required
+        />
+      </div>
+
       {/* Partner */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Partner
+          Partner / Referrer
         </label>
         <input
           type="text"
@@ -81,28 +136,58 @@ export default function ReviewForm({ onSubmit }) {
         />
       </div>
 
-      {/* Transcript */}
-      <div>
-        <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-semibold text-gray-700">
-            Call Transcript *
+      {/* Transcripts */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Call Transcripts * ({formData.calls.length} {formData.calls.length === 1 ? 'call' : 'calls'})
           </label>
-          <span className="text-xs text-gray-500">
-            {transcriptLength} characters
-          </span>
+          <p className="text-xs text-gray-600 mb-4">
+            Add multiple calls from the same prospect/client for comprehensive review
+          </p>
         </div>
-        <textarea
-          name="transcript"
-          value={formData.transcript}
-          onChange={handleChange}
-          placeholder="Paste the full call transcript here. Format: Agent: [text] Client: [text]"
-          rows={8}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solar-500 focus:border-transparent outline-none transition resize-none"
-          required
-        />
-        <p className="text-xs text-gray-500 mt-2">
-          Include agent and client dialogue for accurate analysis
-        </p>
+
+        {formData.calls.map((call, index) => (
+          <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-sm font-semibold text-gray-700">
+                Call {index + 1}
+              </label>
+              {formData.calls.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeCall(index)}
+                  className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded transition"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-gray-600"></span>
+              <span className="text-xs text-gray-500">
+                {transcriptLengths[index] || 0} characters
+              </span>
+            </div>
+
+            <textarea
+              value={call.transcript}
+              onChange={(e) => handleTranscriptChange(index, e.target.value)}
+              placeholder="Paste the call transcript here. Format: Agent: [text] Client: [text]"
+              rows={6}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solar-500 focus:border-transparent outline-none transition resize-none"
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={addCall}
+          className="w-full py-2 px-4 border-2 border-dashed border-solar-300 hover:border-solar-500 text-solar-600 hover:text-solar-700 font-semibold rounded-lg transition"
+        >
+          + Add Another Call
+        </button>
       </div>
 
       {/* Submit Button */}
